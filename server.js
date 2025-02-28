@@ -458,8 +458,7 @@ const initializeAI = () => {
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-console.log(`🚀 AI Server will run on port: ${PORT}`);
-
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
+  initializeAI();
 });
