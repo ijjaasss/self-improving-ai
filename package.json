@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "postinstall": "npx puppeteer browsers install chrome && echo \"CHROME_BIN=/opt/render/.cache/puppeteer/chrome/linux-133.0.6943.126/chrome-linux64/chrome\" >> $ENV"
+
   },
   "keywords": [],
   "author": "",
