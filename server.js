@@ -66,7 +66,7 @@ const scrapeData = async (topic) => {
   
   const browser = await puppeteer.launch({ 
     headless: "new",
-    executablePath: puppeteer.executablePath(), 
+    executablePath: process.env.CHROME_BIN || "/usr/bin/google-chrome-stable",
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
