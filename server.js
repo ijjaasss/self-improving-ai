@@ -65,14 +65,14 @@ const scrapeData = async (topic) => {
   
   const browser = await puppeteer.launch({ 
     headless: "new",
-  executablePath: process.env.CHROME_BIN || "/usr/bin/google-chrome-stable",
-  args: [
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    "--remote-debugging-port=9222"
-  ]
+    executablePath: process.env.CHROME_BIN || puppeteer.executablePath(),
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--remote-debugging-port=9222"
+    ]
   });
   const page = await browser.newPage();
   
@@ -458,7 +458,8 @@ const initializeAI = () => {
 
 // Start Server
 const PORT = process.env.PORT || 5000;
+console.log(`🚀 AI Server will run on port: ${PORT}`);
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-  initializeAI();
 });
