@@ -1,0 +1,22 @@
+# 🚀 Ignore Node.js dependencies
+node_modules/
+package-lock.json
+
+# 🚀 Ignore Environment Variables
+.env
+
+# 🚀 Ignore Logs & Temporary Files
+*.log
+logs/
+*.tmp
+*.cache
+
+# 🚀 Ignore Backups & Build Files
+backup_*.js
+.DS_Store
+Thumbs.db
+
+# 🚀 Ignore IDE & OS-Specific Files
+.vscode/
+.idea/
+*.swp
