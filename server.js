@@ -66,16 +66,11 @@ const scrapeData = async (topic) => {
   
   const browser = await puppeteer.launch({ 
     headless: "new",
-    executablePath: process.env.CHROME_BIN || "/usr/bin/google-chrome",
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--disable-background-timer-throttling",
-      "--disable-backgrounding-occluded-windows",
-      "--disable-renderer-backgrounding",
-      "--remote-debugging-port=9222"
+      "--disable-gpu"
     ]
   });
   const page = await browser.newPage();
