@@ -66,17 +66,17 @@ const scrapeData = async (topic) => {
   
   const browser = await puppeteer.launch({ 
     headless: "new",
-  executablePath: process.env.CHROME_BIN || puppeteer.executablePath(),
-  args: [
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    "--disable-background-timer-throttling",
-    "--disable-backgrounding-occluded-windows",
-    "--disable-renderer-backgrounding",
-    "--remote-debugging-port=9222"
-  ]
+    executablePath: puppeteer.executablePath(), 
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
+      "--remote-debugging-port=9222"
+    ]
   });
   const page = await browser.newPage();
   
