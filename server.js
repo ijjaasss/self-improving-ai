@@ -16,9 +16,10 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.error("❌ MongoDB Connection Error:", err));
+
 
 // Schema Definitions
 const KnowledgeSchema = new mongoose.Schema({
@@ -65,14 +66,17 @@ const scrapeData = async (topic) => {
   
   const browser = await puppeteer.launch({ 
     headless: "new",
-    executablePath: process.env.CHROME_BIN || puppeteer.executablePath(),
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--remote-debugging-port=9222"
-    ]
+  executablePath: process.env.CHROME_BIN || puppeteer.executablePath(),
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--disable-background-timer-throttling",
+    "--disable-backgrounding-occluded-windows",
+    "--disable-renderer-backgrounding",
+    "--remote-debugging-port=9222"
+  ]
   });
   const page = await browser.newPage();
   
@@ -320,10 +324,10 @@ const updateCode = async (newCode) => {
   fs.writeFileSync(backupPath, fs.readFileSync(__filename));
   
   try {
-    // Test compile the new code
+    // Test new code before applying
     await testNewCode(newCode);
     vm.runInNewContext(newCode, { require }, { timeout: 5000 });
-    
+  
     // Store update in database
     await CodeUpdate.create({
       version: newVersion,
@@ -331,31 +335,36 @@ const updateCode = async (newCode) => {
       changes: "Self-improvement update",
       performance: { timestamp }
     });
-    
-    // Write new code
+  
+    // Apply code update
     fs.writeFileSync(__filename, newCode);
     console.log(`✅ AI code updated to version ${newVersion}! Restarting server...`);
+    
     execSync("git add server.js");
     execSync('git commit -m "AI self-improvement update"');
-    execSync("git push origin main"); // Change 'main' to your branch name
-
+    execSync("git push origin main");
+  
     console.log("✅ Changes pushed to GitHub!");
-    // Restart application
-    exec("pm2 restart all", (err, stdout, stderr) => {
-      if (err) {
-        console.error(`❌ Restart Error: ${stderr}`);
-        // Rollback if restart fails
-        fs.writeFileSync(__filename, fs.readFileSync(backupPath));
-        exec("pm2 restart all");
-        return false;
-      }
-    });
+  
+    // Restart on Render instead of pm2
+    if (process.env.RENDER_DEPLOY_HOOK) {
+      console.log("🚀 Triggering redeploy on Render...");
+      exec(`curl -X POST ${process.env.RENDER_DEPLOY_HOOK}`, (err, stdout, stderr) => {
+        if (err) {
+          console.error("❌ Failed to trigger Render redeploy:", stderr);
+        } else {
+          console.log("✅ Render redeploy triggered successfully!");
+        }
+      });
+    }
+  
     return true;
   } catch (error) {
-    console.error("❌ Invalid code update:", error.message);
-    // Keep backup for reference
+    console.error("❌ Code update failed! Rolling back...");
+    fs.writeFileSync(__filename, fs.readFileSync(backupPath)); // Restore backup
     return false;
   }
+  
 };
 
 const generateCode = async (improvementGoal) => {
@@ -408,33 +417,30 @@ const analyzePerformance = async () => {
 
 const selfImprove = async () => {
   console.log("🤖 Starting self-improvement process...");
-
-  // Analyze performance to identify improvement goals
   const improvementGoals = await analyzePerformance();
   if (improvementGoals.length === 0) {
     console.log("✅ No improvements needed at this time.");
     return;
   }
 
-  // Generate new code for each improvement goal
-  for (const goal of improvementGoals) {
-    console.log(`🎯 Generating code to improve: ${goal}`);
+  // Only apply one update at a time to avoid overloading
+  const goal = improvementGoals[0];
+  console.log(`🎯 Generating code to improve: ${goal}`);
 
-    const newCode = await generateCode(goal);
-    if (!newCode) {
-      console.log("❌ Failed to generate new code.");
-      continue;
-    }
+  const newCode = await generateCode(goal);
+  if (!newCode) {
+    console.log("❌ Failed to generate new code.");
+    return;
+  }
 
-    // Apply the update
-    const success = await updateCode(newCode);
-    if (success) {
-      console.log(`✅ Successfully improved: ${goal}`);
-    } else {
-      console.log(`❌ Failed to apply update for: ${goal}`);
-    }
+  const success = await updateCode(newCode);
+  if (success) {
+    console.log(`✅ Successfully improved: ${goal}`);
+  } else {
+    console.log(`❌ Failed to apply update for: ${goal}`);
   }
 };
+
 
 const initializeAI = () => {
   console.log("🧠 Initializing AI self-learning system...");
